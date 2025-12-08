@@ -3,8 +3,6 @@ FROM registry.access.redhat.com/ubi7/ubi:7.7
 
 ENV JBOSS_HOME=/opt/jboss
 
-COPY jboss-eap-7.2.0.zip /tmp/jboss-eap-7.2.0.zip
-
 RUN yum install -y java-11-openjdk java-11-openjdk-devel && \
     yum install -y unzip curl && \
     yum clean all && \
