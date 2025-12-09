@@ -28,7 +28,6 @@ jobs:
         with:
           image-ref: ${{ env.FULL_IMAGE }}
           severity: HIGH,CRITICAL
-          exit-code: 0
           ignore-unfixed: true
 
 
@@ -57,6 +56,9 @@ jobs:
           --fail-on high \
           --only-fixed=false \
           --add-cpes-if-none | grep -E "High|Critical"
+        with:
+          exit-code: 1
+       
           
 # muestra solo las high o critical
 
