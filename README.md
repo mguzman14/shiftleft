@@ -8,7 +8,12 @@
 
 ## Explicación
 
-Se han hecho 2 workflows de Github Actions (ambos adaptados del repo https://github.com/Josep-Andreu/segur_cloud/blob/main/build-and-push.yaml):
+La imagen `Dockerfile` se ha creado siguiendo las instrucciones de las diapos 63 y 64 del pwp (_Crear imatges amb Dockerfile - Layering d’imatges_).
+
+Los archivos de Github Actions se han hecho utilizando de referencia el repo https://github.com/Josep-Andreu/segur_cloud/blob/main/build-and-push.yaml y siguiendo las instrucciones de las diapos a continuación de la 64. 
+
+Se han hecho 2 workflows de Github Actions:
+
 1. `build_and_push.yml`: se ejecuta cada vez que se hace un commit en la branch `main`. Si encuentra vulns que son High o Critical, no sube la imagen a Quay.io. Para ello, se ha utilizado el archivo del repo original, únicamente cambiando el registro de la imagen y el tag. 
 
 2. `build_fix_push.yml` (extra): se ejecuta manualmente. Hace lo mismo que el anterior pero, si el scan de Grype detecta vulns High o Critical, las corrige, genera una imagen fixeada y la sube y firma a Quay.io. Para ello, se han adaptado los job _scan_ y _push_ y se ha añadido el job _remediate_. A continuación, se explica el cómo con más detalle:
