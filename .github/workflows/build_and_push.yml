@@ -49,19 +49,19 @@ jobs:
           if-no-files-found: error
           retention-days: 14
         # 🛡 Evaluate SBOM with Grype (fail build on HIGH or CRITICAL vulns)
-      # - name: 🛡 Vulnerability scan (Grype on SBOM)
-      #   run: |
-      #     docker run --rm \
-      #     -v "$PWD":/work \
-      #     anchore/grype:latest /work/sbom.syft.json \
-      #     --fail-on high \
-      #     --only-fixed=false \
-      #     --add-cpes-if-none
+      - name: 🛡 Vulnerability scan (Grype on SBOM)
+        run: |
+          docker run --rm \
+          -v "$PWD":/work \
+          anchore/grype:v0.104.1 /work/sbom.syft.json \
+          --fail-on high \
+          --only-fixed=false \
+          --add-cpes-if-none
 
-      - name: Scan SBOM
-        uses: anchore/scan-action@v6
-        with:
-          sbom: sbom.syft.json
+      # - name: Scan SBOM
+      #   uses: anchore/scan-action@v6
+      #   with:
+      #     sbom: sbom.syft.json
 
       - name: 🔑 Login to Quay.io
         run: |
