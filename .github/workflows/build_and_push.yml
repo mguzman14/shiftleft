@@ -15,7 +15,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      full_image: ${{ env.FULL_IMAGE }}
+      full_image: quay.io/mguzman98/jboss_lab:v1.0.0
 
     steps:
       - name: 🧩 Checkout code
@@ -23,7 +23,7 @@ jobs:
 
       - name: 🔧 Build container image
         run: |
-          docker build -t $FULL_IMAGE .
+          docker build -t ${{ env.FULL_IMAGE }} .
 
 
   scan:
@@ -136,17 +136,15 @@ jobs:
           echo "No se encontraron HIGH/CRITICAL. Pushing imagen original..."
           docker push ${{ needs.build.outputs.full_image }}
 
+      - name: ⬇️ Download remediation script
+        if: ${{ needs.scan.outputs.needs_remediation == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: remediation-commands
+
       - name: 🔨 Ruta Remediada (Aplicar Parche y Reconstruir)
-        # Se ejecuta SOLO SI se necesita remediación
         if: ${{ needs.scan.outputs.needs_remediation == 'true' }}
         run: |
-          # 1. Descargar el script generado
-          actions/download-artifact@v4
-          
-          # 2. Mover el script al contexto de construcción
-          mv remediation-commands/remediacion.sh .
-          
-          # 3. Reconstruir la imagen final (el Dockerfile debe tener la línea 'COPY remediacion.sh .')
           REMEDIATED_TAG="${{ needs.build.outputs.full_image }}-remediated"
           echo "Aplicando parches y reconstruyendo en ${REMEDIATED_TAG}..."
           
@@ -155,7 +153,7 @@ jobs:
           # RUN sh remediacion.sh && rm remediacion.sh
           docker build -t $REMEDIATED_TAG .
 
-          # 4. Push de la imagen parcheada
+          # Push de la imagen parcheada
           docker push $REMEDIATED_TAG
   push-sign:
     runs-on: ubuntu-latest
@@ -179,5 +177,6 @@ jobs:
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
         run: |
-          echo "$COSIGN_PRIVATE_KEY" > cosign.key
-          cosign sign --key cosign.key $FULL_IMAGE
+          printf '%s' "$COSIGN_PRIVATE_KEY" > cosign.key
+          cosign sign --key cosign.key ${{ env.FULL_IMAGE }}
+          shred -u cosign.key || rm -f cosign.key
