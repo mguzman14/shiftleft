@@ -174,20 +174,38 @@ jobs:
           # RUN sh remediacion.sh && rm remediacion.sh
           docker build -t $REMEDIATED_TAG .
 
-          # Push de la imagen parcheada
-          docker push $REMEDIATED_TAG
+          echo "remediated_tag=$REMEDIATED_TAG" >> $GITHUB_OUTPUT
   push-sign:
     runs-on: ubuntu-latest
-    needs: [scan] # Depende del Job anterior
+    # CRÍTICO: Depende de AMBOS jobs anteriores
+    needs: [scan, remediate] 
+    # CRÍTICO: Se ejecuta si 'scan' pasó, incluso si 'remediate' fue skipped (failure() cubre skip)
+    if: success() || failure()
     steps:
       - name: 🔑 Login to Quay.io
         run: |
           docker login quay.io -u "${{ secrets.QUAY_USER }}" -p "${{ secrets.QUAY_PASSWORD }}"
 
-      - name: 🚀 Push image to Quay.io
+      - name: 🎯 Determinar la Imagen a Desplegar
+        id: determine_image
         run: |
-          docker push $FULL_IMAGE
+          NEEDS_FIX="${{ needs.scan.outputs.needs_remediation }}"
+          
+          if [ "$NEEDS_FIX" == "true" ]; then
+            # Si se remedió, usamos la etiqueta de salida del job 'remediate'
+            FINAL_TAG="${{ needs.remediate.outputs.remediated_image_tag }}"
+            echo "La imagen final es la remediada: $FINAL_TAG"
+          else
+            # Si NO se remedió, usamos la etiqueta original del job 'scan'
+            FINAL_TAG="${{ needs.scan.outputs.full_image }}"
+            echo "La imagen final es la original (segura): $FINAL_TAG"
+          fi
+          
+          echo "final_tag=$FINAL_TAG" >> $GITHUB_OUTPUT
 
+      - name: 🚀 Push Imagen Final a Quay.io
+        run: |
+          docker push $FINAL_TAG
       - name: Install cosign
         run: |
           curl -LO https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
