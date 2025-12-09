@@ -28,6 +28,7 @@ jobs:
 
   scan:
     runs-on: ubuntu-latest
+    needs: build
     outputs:
       needs_remediation: ${{ steps.check_vulns.outputs.needs_remediation }}
 
@@ -157,7 +158,7 @@ jobs:
           docker push $REMEDIATED_TAG
   push-sign:
     runs-on: ubuntu-latest
-    needs: scan # Depende del Job anterior
+    needs: [scan, remediate] # Depende del Job anterior
     steps:
       - name: 🔑 Login to Quay.io
         run: |
