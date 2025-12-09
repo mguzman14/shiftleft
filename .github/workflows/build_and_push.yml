@@ -227,6 +227,7 @@ jobs:
       - name: Sign the image
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           printf '%s' "$COSIGN_PRIVATE_KEY" > cosign.key
           cosign sign --key cosign.key $FINAL_TAG
