@@ -61,7 +61,9 @@ jobs:
       - name: Scan SBOM
         uses: anchore/scan-action@v6
         with:
-          sbom: "/work/sbom.syft.json"
+          sbom: sbom.syft.json
+          path: sbom.syft.json
+          output-format: sarif
 
       - name: 🔑 Login to Quay.io
         run: |
