@@ -81,6 +81,7 @@ jobs:
       - name: 🛡 Vulnerability scan (Grype on SBOM)
         id: check_vulns
         run: |
+          set +e
           docker run --rm \
           -v "$PWD":/work \
           anchore/grype:latest /work/sbom.syft.json \
