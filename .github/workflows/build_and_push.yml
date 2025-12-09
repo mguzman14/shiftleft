@@ -194,10 +194,6 @@ jobs:
         run: |
           docker load -i final_image.tar
 
-      - name: 🔑 Login to Quay.io
-        run: |
-          docker login quay.io -u "${{ secrets.QUAY_USER }}" -p "${{ secrets.QUAY_PASSWORD }}"
-
       - name: 🎯 Determinar la Imagen a Desplegar
         id: determine_image
         run: |
@@ -215,6 +211,10 @@ jobs:
           
           echo "FINAL_TAG=$FINAL_TAG" >> $GITHUB_ENV
 
+      - name: 🔑 Login to Quay.io
+        run: |
+          docker login quay.io -u "${{ secrets.QUAY_USER }}" -p "${{ secrets.QUAY_PASSWORD }}"
+
       - name: 🚀 Push Imagen Final a Quay.io
         run: |
           docker push $FINAL_TAG
@@ -229,5 +229,5 @@ jobs:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
         run: |
           printf '%s' "$COSIGN_PRIVATE_KEY" > cosign.key
-          cosign sign --key cosign.key ${{ env.FULL_IMAGE }}
+          cosign sign --key cosign.key $FINAL_TAG
           shred -u cosign.key || rm -f cosign.key
