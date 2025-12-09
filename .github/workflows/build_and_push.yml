@@ -56,7 +56,9 @@ jobs:
           anchore/grype:v0.104.1 /work/sbom.syft.json \
           --fail-on high \
           --only-fixed=false \
-          --add-cpes-if-none
+          --add-cpes-if-none | grep -E "High|Critical"
+          
+# muestra solo las high o critical
 
       # - name: Scan SBOM
       #   uses: anchore/scan-action@v6
