@@ -167,7 +167,17 @@ jobs:
           # RUN sh remediacion.sh && rm remediacion.sh
           docker build -t $REMEDIATED_TAG .
 
+          # 💡 Paso 1: Guardar la imagen en un archivo .tar
+          docker save -o final_image.tar $REMEDIATED_TAG
+
           echo "remediated_tag=$REMEDIATED_TAG" >> $GITHUB_OUTPUT
+
+      - name: 📤 Subir Imagen como Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-docker-image
+          path: final_image.tar
+          retention-days: 1
   push-sign:
     runs-on: ubuntu-latest
     # CRÍTICO: Depende de AMBOS jobs anteriores
@@ -175,6 +185,15 @@ jobs:
     # CRÍTICO: Se ejecuta si 'scan' pasó, incluso si 'remediate' fue skipped (failure() cubre skip)
     if: success() || failure()
     steps:
+      - name: ⬇️ Descargar Imagen Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: final-docker-image
+
+      - name: 📦 Cargar Imagen desde tar
+        run: |
+          docker load -i final_image.tar
+
       - name: 🔑 Login to Quay.io
         run: |
           docker login quay.io -u "${{ secrets.QUAY_USER }}" -p "${{ secrets.QUAY_PASSWORD }}"
