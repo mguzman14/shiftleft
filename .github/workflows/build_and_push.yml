@@ -12,8 +12,11 @@ env:
   FULL_IMAGE: quay.io/mguzman98/jboss_lab:v1.0.0
 
 jobs:
-  build-scan-push:
+  build-scan-check:
     runs-on: ubuntu-latest
+    outputs:
+      needs_remediation: ${{ steps.check_vulns.outputs.needs_remediation }}
+      full_image: ${{ env.FULL_IMAGE }}
 
     steps:
       - name: 🧩 Checkout code
@@ -55,7 +58,51 @@ jobs:
           anchore/grype:latest /work/sbom.syft.json \
           --fail-on high \
           --only-fixed=false \
-          --add-cpes-if-none
+          --add-cpes-if-none \
+          -o json > grype_report.json
+
+          # obtener salida de grype
+          docker run --rm \
+            -v "$PWD":/work \
+            anchore/grype:latest /work/sbom.syft.json \
+            --fail-on high,critical > /dev/null
+          
+          GRYPE_EXIT_CODE=$?
+
+          # 3. Decisiones basadas en el código de salida
+          if [ $GRYPE_EXIT_CODE -ne 0 ]; then
+            echo "❌ VULNERABILIDADES CRÍTICAS/ALTAS ENCONTRADAS."
+            echo "needs_remediation=true" >> $GITHUB_OUTPUT
+            
+            # --- LÓGICA DE GENERACIÓN DEL SCRIPT DE REMEDIACIÓN ---
+            # Aquí generamos el script que se usará en el siguiente Job
+            # (Se necesita el comando jq para extraer los parches del JSON. Necesitas JQ instalado en el runner.)
+            cat grype_report.json | jq -r '
+              .matches[] |
+              # Filtra por severidad (High/Critical) y por fix disponible
+              select(.vulnerability.severity == "High" or .vulnerability.severity == "Critical") |
+              select(.vulnerability.fix.versions | length > 0) |
+              {
+                name: .artifact.name,
+                fixedVersion: .vulnerability.fix.versions[0]
+              } |
+              # Genera el comando 'yum update' específico (asumiendo que estás en un sistema RPM)
+              "yum update " + .name + "-" + .fixedVersion + " -y"
+            ' | sort -u > remediacion.sh
+            
+          else
+            echo "✅ IMAGEN SEGURA. Lista para el push."
+            echo "needs_remediation=false" >> $GITHUB_OUTPUT
+            # Crea un archivo vacío si no hay nada que remediar
+            touch remediacion.sh 
+          fi
+
+      - name: 📤 Subir Script de Remediación
+        uses: actions/upload-artifact@v4
+        with:
+          name: remediation-commands
+          path: remediacion.sh
+          retention-days: 1 # Se borra rápidamente ya que es un archivo temporal
       - name: 🔑 Login to Quay.io
         run: |
           docker login quay.io -u "${{ secrets.QUAY_USER }}" -p "${{ secrets.QUAY_PASSWORD }}"
@@ -76,3 +123,50 @@ jobs:
         run: |
           echo "$COSIGN_PRIVATE_KEY" > cosign.key
           cosign sign --key cosign.key $FULL_IMAGE
+
+
+  remediate_and_push:
+    runs-on: ubuntu-latest
+    needs: build-scan-check # Depende del Job anterior
+    
+    # Este Job se ejecuta si el anterior fue exitoso, independientemente de si encontró vulns.
+    if: success() || failure()
+
+    steps:
+      - name: ⬇️ Checkout del Código
+        uses: actions/checkout@v4
+        
+      - name: 🔑 Login to Quay.io
+        run: |
+          docker login quay.io -u "${{ secrets.QUAY_USER }}" -p "${{ secrets.QUAY_PASSWORD }}"
+
+      - name: 🚀 Ruta Segura (Push Directo)
+        # Se ejecuta SI NO se necesita remediación (o si el Job de escaneo falló por otra razón)
+        if: ${{ needs.build-scan-check.outputs.needs_remediation == 'false' }}
+        run: |
+          echo "No se encontraron HIGH/CRITICAL. Pushing imagen original..."
+          docker push ${{ needs.build-scan-check.outputs.full_image }}
+
+      - name: 🔨 Ruta Remediada (Aplicar Parche y Reconstruir)
+        # Se ejecuta SOLO SI se necesita remediación
+        if: ${{ needs.build-scan-check.outputs.needs_remediation == 'true' }}
+        run: |
+          # 1. Descargar el script generado
+          actions/download-artifact@v4
+          
+          # 2. Mover el script al contexto de construcción
+          mv remediation-commands/remediacion.sh .
+          
+          # 3. Reconstruir la imagen final (el Dockerfile debe tener la línea 'COPY remediacion.sh .')
+          REMEDIATED_TAG="${{ needs.build-scan-check.outputs.full_image }}-remediated"
+          echo "Aplicando parches y reconstruyendo en ${REMEDIATED_TAG}..."
+          
+          # ASUME QUE EL DOCKERFILE AHORA TIENE LA INSTRUCCIÓN: 
+          # COPY remediacion.sh .
+          # RUN sh remediacion.sh && rm remediacion.sh
+          docker build -t $REMEDIATED_TAG .
+
+          # 4. Push de la imagen parcheada
+          docker push $REMEDIATED_TAG
+          
+      # ... (Firma de la Imagen - Debes decidir si firmas la original o la remediada) ...
