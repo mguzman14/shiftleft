@@ -42,6 +42,7 @@ jobs:
     needs: build
     outputs:
       needs_remediation: ${{ steps.check_vulns.outputs.needs_remediation }}
+      full_image: ${{ steps.fix_img.outputs.full_image }}
 
     steps:
       - name: ⬇️ Download image artifact
@@ -154,6 +155,7 @@ jobs:
           name: remediation-commands
 
       - name: 🔨 Ruta Remediada (Aplicar Parche y Reconstruir)
+        id: fix_img
         if: ${{ needs.scan.outputs.needs_remediation == 'true' }}
         run: |
           ORIGINAL_IMAGE="${{ needs.scan.outputs.full_image }}" 
