@@ -147,18 +147,6 @@ jobs:
     steps:
       - name: ⬇️ Checkout del Código
         uses: actions/checkout@v4
-        
-      - name: 🔑 Login to Quay.io
-        run: |
-          docker login quay.io -u "${{ secrets.QUAY_USER }}" -p "${{ secrets.QUAY_PASSWORD }}"
-
-      - name: 🚀 Ruta Segura (Push Directo)
-        # Se ejecuta SI NO se necesita remediación (o si el Job de escaneo falló por otra razón)
-        if: ${{ needs.scan.outputs.needs_remediation == 'false' }}
-        run: |
-          echo "No se encontraron HIGH/CRITICAL. Pushing imagen original..."
-          docker push ${{ needs.build.outputs.full_image }}
-
       - name: ⬇️ Download remediation script
         if: ${{ needs.scan.outputs.needs_remediation == 'true' }}
         uses: actions/download-artifact@v4
