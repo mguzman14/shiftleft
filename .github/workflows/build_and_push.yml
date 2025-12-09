@@ -201,11 +201,11 @@ jobs:
             echo "La imagen final es la original (segura): $FINAL_TAG"
           fi
           
-          echo "final_tag=$FINAL_TAG" >> $GITHUB_OUTPUT
+          echo "FINAL_TAG=$FINAL_TAG" >> $GITHUB_ENV
 
       - name: 🚀 Push Imagen Final a Quay.io
         run: |
-          docker push $FINAL_TAG
+          docker push ${{ env.FINAL_TAG }}
       - name: Install cosign
         run: |
           curl -LO https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
