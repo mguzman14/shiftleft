@@ -138,6 +138,8 @@ jobs:
   remediate:
     runs-on: ubuntu-latest
     needs: scan # Depende del Job anterior
+    outputs:
+      final_remediated_tag: ${{ steps.remediate_step.outputs.remediated_tag }}
     if: needs.scan.outputs.needs_remediation == 'true'
     
     # Este Job se ejecuta si el anterior fue exitoso, independientemente de si encontró vulns.
@@ -166,7 +168,8 @@ jobs:
       - name: 🔨 Ruta Remediada (Aplicar Parche y Reconstruir)
         if: ${{ needs.scan.outputs.needs_remediation == 'true' }}
         run: |
-          REMEDIATED_TAG="${{ env.FULL_IMAGE }}-remediated"
+          ORIGINAL_IMAGE="${{ needs.scan.outputs.full_image }}" 
+          REMEDIATED_TAG="${ORIGINAL_IMAGE}-remediated"
           echo "Aplicando parches y reconstruyendo en ${REMEDIATED_TAG}..."
           
           # ASUME QUE EL DOCKERFILE AHORA TIENE LA INSTRUCCIÓN: 
@@ -193,7 +196,7 @@ jobs:
           
           if [ "$NEEDS_FIX" == "true" ]; then
             # Si se remedió, usamos la etiqueta de salida del job 'remediate'
-            FINAL_TAG="${{ needs.remediate.outputs.remediated_image_tag }}"
+            FINAL_TAG="${{ needs.remediate.outputs.final_remediated_tag }}"
             echo "La imagen final es la remediada: $FINAL_TAG"
           else
             # Si NO se remedió, usamos la etiqueta original del job 'scan'
