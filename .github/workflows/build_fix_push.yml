@@ -1,7 +1,7 @@
 
 # Source: https://github.com/Josep-Andreu/segur_cloud/blob/main/build-and-push.yaml
 
-name: Build and Push to Quay
+name: Build, Fix and Push to Quay
 
 on:
   push:
