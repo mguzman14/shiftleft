@@ -9,11 +9,9 @@
 ## Explicación
 
 Se han hecho 2 workflows de Github Actions (ambos adaptados del repo https://github.com/Josep-Andreu/segur_cloud/blob/main/build-and-push.yaml):
-1. `build_and_push.yml`: se ejecuta cada vez que se hace un commit en la branch `main`. Si encuentra vulns que son High o Critical, no sube la imagen a Quay.io.
+1. `build_and_push.yml`: se ejecuta cada vez que se hace un commit en la branch `main`. Si encuentra vulns que son High o Critical, no sube la imagen a Quay.io. Para ello, se ha utilizado el archivo del repo original, únicamente cambiando el registro de la imagen y el tag. 
 
-2. `build_fix_push.yml` (extra): se ejecuta manualmente. Hace lo mismo que el anterior pero, si el scan de Grype detecta vulns High o Critical, las corrige, genera una imagen fixeada y la sube y firma a Quay.io. 
-
-Para ello, se han adaptado los job _scan_ y _push_ y se ha añadido el job _remediate_. 
+2. `build_fix_push.yml` (extra): se ejecuta manualmente. Hace lo mismo que el anterior pero, si el scan de Grype detecta vulns High o Critical, las corrige, genera una imagen fixeada y la sube y firma a Quay.io. Para hacer el Para ello, se han adaptado los job _scan_ y _push_ y se ha añadido el job _remediate_. A continuación, se explica el cómo con más detalle:
 
 En el job **scan**, después de hacer el scan con Grype, se hace lo siguiente: 
     
