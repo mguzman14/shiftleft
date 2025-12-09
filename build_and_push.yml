@@ -1,0 +1,55 @@
+
+# Source: https://github.com/Josep-Andreu/segur_cloud/blob/main/build-and-push.yaml
+
+name: Build and Push to Quay
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  FULL_IMAGE: quay.io/mguzman98/jboss_lab:v1.0.0
+
+jobs:
+  build-scan-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧩 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Build container image
+        run: |
+          docker build -t $FULL_IMAGE .
+
+      - name: 🔍 Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.FULL_IMAGE }}
+          severity: HIGH,CRITICAL
+          exit-code: 1
+          ignore-unfixed: true
+
+      - name: 🔑 Login to Quay.io
+        run: |
+          docker login quay.io -u "${{ secrets.QUAY_USER }}" -p "${{ secrets.QUAY_PASSWORD }}"
+
+      - name: 🚀 Push image to Quay.io
+        run: |
+          docker push $FULL_IMAGE
+
+      - name: Install cosign
+        run: |
+          curl -LO https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
+          chmod +x cosign-linux-amd64
+          sudo mv cosign-linux-amd64 /usr/local/bin/cosign
+
+      - name: Sign the image
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          printf '%s' "$COSIGN_PRIVATE_KEY" > cosign.key
+          cosign sign --key cosign.key $FINAL_TAG
+          shred -u cosign.key || rm -f cosign.key

@@ -4,9 +4,7 @@
 name: Build, Fix and Push to Quay
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 env:
   FULL_IMAGE: quay.io/mguzman98/jboss_lab:v1.0.0
