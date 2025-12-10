@@ -7,7 +7,7 @@ on:
 
 jobs:
   call-template:
-    uses: ./.github/workflows/templates/build-and-push.yml
+    uses: ./.github/workflows/build-and-push.yml
     with:
       dockerfile: docker/Dockerfile_vulnerable
       full_image: quay.io/mguzman98/shiftleft:v1.0.0
