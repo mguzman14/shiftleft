@@ -5,8 +5,11 @@ name: Build and Push to Quay
 
 on:
   push:
-    paths:
-      - 'docker/**' 
+    branches:
+      - main
+
+env:
+  FULL_IMAGE: quay.io/mguzman98/jboss_lab:v1.0.0
 
 jobs:
   build-scan-push:
@@ -27,18 +30,14 @@ jobs:
       - name: 🧩 Checkout code
         uses: actions/checkout@v4
 
-      - name: Conditional Build Trigger
-        if: contains(github.event.head_commit.modified, matrix.image.dockerfile) || contains(github.event.head_commit.added, matrix.image.dockerfile)
-        run: echo "Triggered build for ${{ matrix.image.dockerfile }}"
-
       - name: 🔧 Build container image
         run: |
-          docker build -t ${{ matrix.image.full_image }} .
+          docker build -t $FULL_IMAGE .
 
       - name: 🔍 Scan image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ matrix.image.full_image }}
+          image-ref: ${{ env.FULL_IMAGE }}
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: 1
@@ -50,7 +49,7 @@ jobs:
           docker run --rm \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v "$PWD":/work \
-          anchore/syft:v1.38.0 "${{ matrix.image.full_image }}" -o syft-json > sbom.syft.json
+          anchore/syft:v1.38.0 "$FULL_IMAGE" -o syft-json > sbom.syft.json
           test -s sbom.syft.json && echo "SBOM created: sbom.syft.json"
 
       - name: 📤 Upload SBOM artifact
@@ -67,16 +66,25 @@ jobs:
           -v "$PWD":/work \
           anchore/grype:v0.104.1 /work/sbom.syft.json \
           --fail-on high \
-          --only-fixed=true \
+          --only-fixed=false \
           --add-cpes-if-none | grep -E "High|Critical"
         
+       
+          
+# muestra solo las high o critical
+
+      # - name: Scan SBOM
+      #   uses: anchore/scan-action@v6
+      #   with:
+      #     sbom: sbom.syft.json
+
       - name: 🔑 Login to Quay.io
         run: |
           docker login quay.io -u "${{ secrets.QUAY_USER }}" -p "${{ secrets.QUAY_PASSWORD }}"
 
       - name: 🚀 Push image to Quay.io
         run: |
-          docker push ${{ matrix.image.full_image }}
+          docker push $FULL_IMAGE
 
       - name: Install cosign
         run: |
