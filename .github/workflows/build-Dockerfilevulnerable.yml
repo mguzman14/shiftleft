@@ -11,4 +11,4 @@ jobs:
     secrets: inherit
     with:
       dockerfile: docker/Dockerfilevulnerable
-      full_image: quay.io/mguzman98/shiftleft_lab:v1.0.0
+      full_image: quay.io/mguzman98/shiftleft_lab:v1.0.1
