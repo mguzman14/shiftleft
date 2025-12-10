@@ -8,6 +8,7 @@ on:
 jobs:
   call-template:
     uses: ./.github/workflows/build_and_push.yml
+    secrets: inherit
     with:
       dockerfile: docker/Dockerfilevulnerable
       full_image: quay.io/mguzman98/shiftleft:v1.0.0
