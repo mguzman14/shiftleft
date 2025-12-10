@@ -1,0 +1,13 @@
+name: Build JBoss Docker
+
+on:
+  push:
+    paths:
+      - 'docker/Dockerfile_jboss_lab'
+
+jobs:
+  call-template:
+    uses: ./.github/workflows/build-and-push.yml
+    with:
+      dockerfile: docker/Dockerfile_jboss_lab
+      full_image: quay.io/mguzman98/jboss_lab:v1.0.0

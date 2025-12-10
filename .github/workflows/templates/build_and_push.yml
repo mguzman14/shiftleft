@@ -4,35 +4,28 @@
 name: Build and Push to Quay
 
 on:
-  push:
-    branches:
-      - main
-
-env:
-  FULL_IMAGE: quay.io/mguzman98/jboss_lab:v1.0.0
+  workflow_call:
+    inputs:
+      dockerfile:
+        required: true
+        type: string
+      full_image:
+        required: true
+        type: string
 
 jobs:
   build-scan-push:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        image:
-          - name: jboss_lab
-            dockerfile: ../docker/jboss/Dockerfile_jboss_lab
-            full_image: quay.io/mguzman98/jboss_lab:v1.0.0
-          - name: shiftleft_basic
-            dockerfile: ../docker/Dockerfilebasic
-            full_image: quay.io/mguzman98/shiftleft:v1.0.0
-          - name: shiftleft_vuln
-            dockerfile: ../docker/Dockerfilevulnerable
-            full_image: quay.io/mguzman98/shiftleft:v1.0.0
+    env:
+      FULL_IMAGE: ${{ inputs.full_image }}
+   
     steps:
       - name: 🧩 Checkout code
         uses: actions/checkout@v4
 
       - name: 🔧 Build container image
         run: |
-          docker build -t $FULL_IMAGE .
+          docker build -f ${{ inputs.dockerfile }} -t $FULL_IMAGE .
 
       - name: 🔍 Scan image with Trivy
         uses: aquasecurity/trivy-action@master

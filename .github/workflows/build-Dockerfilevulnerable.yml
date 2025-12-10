@@ -1,0 +1,13 @@
+name: Build Vulnerable Docker
+
+on:
+  push:
+    paths:
+      - 'docker/Dockerfile_vulnerable'
+
+jobs:
+  call-template:
+    uses: ./.github/workflows/build-and-push.yml
+    with:
+      dockerfile: docker/Dockerfile_vulnerable
+      full_image: quay.io/mguzman98/shiftleft:v1.0.0
