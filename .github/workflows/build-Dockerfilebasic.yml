@@ -3,11 +3,11 @@ name: Build Basic Docker
 on:
   push:
     paths:
-      - 'docker/Dockerfile_basic'
+      - 'docker/Dockerfilebasic'
 
 jobs:
   call-template:
     uses: ./.github/workflows/build-and-push.yml
     with:
-      dockerfile: docker/Dockerfile_basic
+      dockerfile: docker/Dockerfilebasic
       full_image: quay.io/mguzman98/shiftleft:v1.0.0
