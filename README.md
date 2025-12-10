@@ -6,7 +6,23 @@
 
 - Crear un pipeline de CI/CD para que suba la imagen a quay.io sólo si es cibersegura.
 
+- Corregir un error de SBOM para que pasen todos los tests
+
 ## Explicación
+
+En el repo hay 2 carpetas:
+- `/.github/workflows`: donde están los workflows de CI/CD de Github.
+- `/docker`: donde están los archivos Docker.
+
+El archivo `Dockerbasic` que se usa para construir la imagen no tiene vulns. Sin embargo, al añadir un escaneo con SBOM, este nos reporta una vulnerabilidad. Esto es porque se está usando el tag `:latest`, el cual no garantiza una estabilidad. Para ello, hemos buscado un `tag` más estable y se lo hemos indicado en la imagen que usa para escanear. De esta manera, ya pasan los tests.
+
+
+
+
+--
+
+
+
 
 La imagen `Dockerfile` se ha creado siguiendo las instrucciones de las diapos 63 y 64 del pwp (_Crear imatges amb Dockerfile - Layering d’imatges_).
 
