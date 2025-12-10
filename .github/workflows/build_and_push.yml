@@ -42,7 +42,7 @@ jobs:
           docker run --rm \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v "$PWD":/work \
-          anchore/syft:v1.38.0 "$FULL_IMAGE" -o syft-json > sbom.syft.json
+          anchore/syft:latest "$FULL_IMAGE" -o syft-json > sbom.syft.json
           test -s sbom.syft.json && echo "SBOM created: sbom.syft.json"
 
       - name: 📤 Upload SBOM artifact
