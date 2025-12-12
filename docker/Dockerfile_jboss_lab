@@ -4,7 +4,7 @@ FROM registry.access.redhat.com/ubi7/ubi:7.7
 ENV JBOSS_HOME=/opt/jboss
 
 RUN yum -y update && \ 
-    yum install -y java-11-openjdk java-11-openjdk-devel unzip=6.0-27ubuntu1.2 curl=8.5.0 && \
+    yum install -y java-11-openjdk java-11-openjdk-devel unzip curl=8.5.0 && \
     mkdir -p ${JBOSS_HOME} && \
     useradd -m -s /bin/bash jboss && echo "jboss:password" | chpasswd && usermod -aG wheel jboss && \
     chown -R jboss:0 /opt/jboss && \
