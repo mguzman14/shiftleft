@@ -18,7 +18,7 @@ jobs:
 
       - name: 🔧 Build container image
         run: |
-          docker build -t $FULL_IMAGE .
+          docker build -f docker/Dockerfile_jboss_lab -t $FULL_IMAGE .
 
       # - name: 🔍 Scan image with Trivy
       #   uses: aquasecurity/trivy-action@master
