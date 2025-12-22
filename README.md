@@ -1,3 +1,27 @@
+
+## Tabla de Contenidos
+
+- [Dockerfile JBOSS](#Dockerfile JBOSS)
+- [Docker image y CI/CD con Quay](#Docker image y CI/CD con Quay)
+
+
+# Dockerfile JBOSS
+
+## Objetivos
+- Crear un dockerfile siguiendo unas instrucciones
+
+- Subir la imagen a Quay.io
+
+## Contenido
+
+Dado los archivos que conforman esta práctica son 3:
+- `.github/workflows/jboss_build_and_push.yml`: un workflow de Github Actions que se ejecuta cada vez que se hace un push en el repositorio `main`.
+- `/docker/Dockerfile_jboss_lab`: el dockerfile que construye la imagen
+
+
+
+
+
 # Docker image y CI/CD con Quay
 
 ## Objetivos
