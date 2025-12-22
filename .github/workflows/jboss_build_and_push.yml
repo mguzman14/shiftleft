@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  FULL_IMAGE: quay.io/mguzman98/jboss_lab:v1.0.1
+  FULL_IMAGE: quay.io/mguzman98/jboss_lab:v1.0.2
 
 jobs:
   build-scan-push:

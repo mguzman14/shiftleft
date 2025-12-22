@@ -7,7 +7,8 @@ RUN yum -y update && \
     yum install -y java-11-openjdk java-11-openjdk-devel unzip curl=8.5.0 && \
     mkdir -p ${JBOSS_HOME} && \
     useradd -m -s /bin/bash jboss && echo "jboss:password" | chpasswd && usermod -aG wheel jboss && \
-    chown -R jboss:0 /opt/jboss && \
+    chown -R jboss:0 ${JBOSS_HOME} && \
+    chmod -R g+rwX ${JBOSS_HOME} && \
     curl -L -o /tmp/jboss-eap-7.2.0.zip https://github.com/daggerok/jboss/releases/download/eap/jboss-eap-7.2.0.zip && \
     unzip /tmp/jboss-eap-7.2.0.zip -d /opt && \
     mv /opt/jboss-eap-7.2/* ${JBOSS_HOME} && \
