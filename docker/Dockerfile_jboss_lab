@@ -19,5 +19,5 @@ EXPOSE 8080 9090 9990
 
 USER jboss
 
-CMD ["${JBOSS_HOME}/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
+CMD ["opt/jboss/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
 
